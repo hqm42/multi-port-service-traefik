@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  web:
+    image: python:3.8
+    command: "/run-servers.sh"
+    volumes:
+      - ./foo:/foo
+      - ./bar:/bar
+      - ./run-servers.sh:/run-servers.sh
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.foo-router.rule=Host(`foo.local`)"
+      - "traefik.http.routers.foo-router.service=foo-service"
+      - "traefik.http.services.foo-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.bar-router.rule=Host(`bar.local`)"
+      - "traefik.http.routers.bar-router.service=bar-service"
+      - "traefik.http.services.bar-service.loadbalancer.server.port=8001"
+  traefik:
+    image: traefik:v2.2
+    command: "--api.insecure=true --providers.docker=true"
+    privileged: true
+    ports:
+      - "3080:80"
+      - "8080:8080"
+    volumes:
+      - ${DOCKER_SOCK}:/var/run/docker.sock
